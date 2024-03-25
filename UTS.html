@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Management</title>
+  <link rel="stylesheet" href="styles.css"> <!-- Added link to external CSS file -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    /* Custom styles */
+    body {
+      background-color: #333; /* Dark grey background */
+      background-image: url('transparent-image.png'); /* Replace 'transparent-image.png' with your image path */
+      background-size: cover;
+      background-repeat: no-repeat;
+    }
+
+    .container {
+      margin-top: 50px;
+    }
+
+    h1 {
+      color: white; /* White font color */
+      position: relative;
+      z-index: 1; /* Ensure it's on top of the background image */
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Data Management</h1>
+    <button class="btn btn-primary mb-3" id="addBtn" data-toggle="modal" data-target="#addModal">Add Data</button>
+    <div id="dataContainer"></div>
+  </div>
+
+  <!-- Add Modal -->
+  <div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="addModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addModalLabel">Add Data</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="addForm">
+            <div class="form-group">
+              <label for="fullName">Full Name:</label>
+              <input type="text" class="form-control" id="fullName" required>
+            </div>
+            <div class="form-group">
+              <label for="address">Address:</label>
+              <input type="text" class="form-control" id="address" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editModalLabel">Edit Data</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id="editForm">
+            <input type="hidden" id="editId">
+            <div class="form-group">
+              <label for="editFullName">Full Name:</label>
+              <input type="text" class="form-control" id="editFullName" required>
+            </div>
+            <div class="form-group">
+              <label for="editAddress">Address:</label>
+              <input type="text" class="form-control" id="editAddress" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Load data from localStorage if available
+    let data = localStorage.getItem('data') ? JSON.parse(localStorage.getItem('data')) : [];
+
+    // Function to save data to localStorage
+    function saveDataToLocalStorage() {
+      localStorage.setItem('data', JSON.stringify(data));
+    }
+
+    // Function to display data
+    function displayData() {
+      let html = '';
+      data.forEach(item => {
+        html += `<div class="card mb-3">
+                    <div class="card-body">
+                      <h5 class="card-title">${item.fullName}</h5>
+                      <p class="card-text">${item.address}</p>
+                      <button class="btn btn-primary mr-2 editBtn" data-toggle="modal" data-target="#editModal" data-id="${item.id}">Edit</button>
+                      <button class="btn btn-danger deleteBtn" data-id="${item.id}">Delete</button>
+                    </div>
+                  </div>`;
+      });
+      document.getElementById('dataContainer').innerHTML = html;
+    }
+
+    // Display initial data
+    displayData();
+
+    // Add data
+    document.getElementById('addForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      let fullName = document.getElementById('fullName').value;
+      let address = document.getElementById('address').value;
+      data.push({ id: data.length + 1, fullName: fullName, address: address });
+      saveDataToLocalStorage(); // Save data to localStorage
+      document.getElementById('addModal').classList.remove('show'); // Hide modal
+      document.getElementById('addModal').style.display = 'none'; // Hide modal backdrop
+      displayData();
+      alert('Data added successfully!');
+    });
+
+    // Edit data
+    document.addEventListener('click', function(e) {
+      if (e.target && e.target.classList.contains('editBtn')) {
+        let id = e.target.getAttribute('data-id');
+        let selectedItem = data.find(item => item.id === parseInt(id));
+        document.getElementById('editId').value = selectedItem.id;
+        document.getElementById('editFullName').value = selectedItem.fullName;
+        document.getElementById('editAddress').value = selectedItem.address;
+      }
+    });
+
+    document.getElementById('editForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      let id = document.getElementById('editId').value;
+      let fullName = document.getElementById('editFullName').value;
+      let address = document.getElementById('editAddress').value;
+      let index = data.findIndex(item => item.id === parseInt(id));
+      data[index].fullName = fullName;
+      data[index].address = address;
+      saveDataToLocalStorage(); // Save data to localStorage
+      document.getElementById('editModal').classList.remove('show'); // Hide modal
+      document.getElementById('editModal').style.display = 'none'; // Hide modal backdrop
+      displayData();
+      alert('Data updated successfully!');
+    });
+
+    // Delete data
+    document.addEventListener('click', function(e) {
+      if (e.target && e.target.classList.contains('deleteBtn')) {
+        let id = e.target.getAttribute('data-id');
+        data = data.filter(item => item.id !== parseInt(id));
+        saveDataToLocalStorage(); // Save data to localStorage
+        displayData();
+        alert('Data deleted successfully!');
+      }
+    });
+  </script>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
+
